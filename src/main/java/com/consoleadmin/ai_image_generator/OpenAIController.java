@@ -13,8 +13,12 @@ public class OpenAIController {
 
     private ChatClient chatClient;
 
-    public OpenAIController(OpenAiChatModel openAiChatModel) {
-        this.chatClient = ChatClient.create(openAiChatModel);
+//    public OpenAIController(OpenAiChatModel openAiChatModel) {
+//        this.chatClient = ChatClient.create(openAiChatModel);
+//    }
+
+    public OpenAIController(ChatClient.Builder chatClientBuilder) {
+        this.chatClient = chatClientBuilder.build();
     }
 
     @GetMapping("/api/{message}")
