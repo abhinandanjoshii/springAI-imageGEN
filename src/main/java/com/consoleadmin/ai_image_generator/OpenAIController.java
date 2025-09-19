@@ -1,6 +1,10 @@
 package com.consoleadmin.ai_image_generator;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.http.ResponseEntity;
@@ -12,13 +16,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class OpenAIController {
 
     private ChatClient chatClient;
+    private final ChatMemory chatMemory; // for storing older chats
 
-//    public OpenAIController(OpenAiChatModel openAiChatModel) {
-//        this.chatClient = ChatClient.create(openAiChatModel);
-//    }
 
     public OpenAIController(ChatClient.Builder chatClientBuilder) {
-        this.chatClient = chatClientBuilder.build();
+        this.chatMemory = MessageWindowChatMemory
+                .builder()
+                .build();
+        this.chatClient = chatClientBuilder
+                .defaultAdvisors(MessageChatMemoryAdvisor
+                        .builder(chatMemory)
+                        .build())
+                .build();
     }
 
     @GetMapping("/api/{message}")
