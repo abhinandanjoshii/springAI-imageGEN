@@ -1,6 +1,7 @@
 package com.consoleadmin.ai_image_generator;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,12 +19,24 @@ public class OpenAIController {
 
     @GetMapping("/api/{message}")
     public ResponseEntity<String> getAnswer(@PathVariable String message) {
-        String response = chatClient
+        // entire packet
+        ChatResponse chatResponse = chatClient
                 .prompt(message)
                 .call()
-                .content(); // just content, other for metadata
+                .chatResponse();
 
-        return ResponseEntity.ok(response);
+        if (chatResponse == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String model = chatResponse.getMetadata().getModel();
+
+        String response = chatResponse
+                .getResult()
+                .getOutput()
+                .getText();
+
+        return ResponseEntity.ok(response + "\n" + model);
     }
 
 }
