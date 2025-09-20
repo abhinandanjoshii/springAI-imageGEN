@@ -119,6 +119,7 @@ public class OpenAIController {
         return vectorStore.similaritySearch(SearchRequest.builder().query(text).topK(2).build());
     }
 
+    // RAG : giving answer based on a prior info, either a file or somewhere else
     @PostMapping("/api/ask")
     public String getAnswerUsingRag(@RequestParam String query) {
         return chatClient
