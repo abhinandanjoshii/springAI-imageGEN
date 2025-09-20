@@ -7,11 +7,13 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,9 @@ public class OpenAIController {
 
     private ChatClient chatClient;
     private final ChatMemory chatMemory;
+
+    @Autowired
+    private VectorStore vectorStore;
 
     @Qualifier("openAiEmbeddingModel")
     @Autowired
@@ -103,6 +108,12 @@ public class OpenAIController {
         }
         // Semantic Searchingg
         return dotProduct*100 / (Math.sqrt(norm1) * Math.sqrt(norm2));
+    }
+
+    // Semantic Search : Headphones should search for similar items say Wearables, Speaker, Bluetooth, Earbuds, Airpods etc.
+    @PostMapping("/api/ai/openapi/semantic-search")
+    public List<Document> getProducts(@RequestParam String text){
+        return vectorStore.similaritySearch(text);
     }
 
 }
