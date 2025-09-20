@@ -83,12 +83,26 @@ public class OpenAIController {
 
     @PostMapping("/api/ai/openai/embedding")
     public ResponseEntity<float[]> embeddings(@RequestParam String text) {
-        EmbeddingRequest embeddingRequest = new EmbeddingRequest(List.of(text), null);
-        EmbeddingResponse embeddingResponse = embeddingModel.call(embeddingRequest);
+        float[] ans = embeddingModel.embed(text);
+        return ResponseEntity.ok(ans);
+    }
 
-        float[] embedding = embeddingResponse.getResult().getOutput();
+    @PostMapping("/api/ai/openai/similarityBetweenVectorDimensions")
+    public double getSimilarity(@RequestParam String text1, @RequestParam String text2) {
+        float[] embedding1 = embeddingModel.embed(text1);
+        float[] embedding2 = embeddingModel.embed(text2);
 
-        return ResponseEntity.ok(embedding);
+        double dotProduct = 0;
+        double norm1 = 0;
+        double norm2 = 0;
+
+        for (int i = 0; i < embedding1.length; i++) {
+            dotProduct += embedding1[i] * embedding2[i];
+            norm1 += Math.pow(embedding1[i], 2);
+            norm2 += Math.pow(embedding2[i], 2);
+        }
+        // Semantic Searchingg
+        return dotProduct*100 / (Math.sqrt(norm1) * Math.sqrt(norm2));
     }
 
 }
