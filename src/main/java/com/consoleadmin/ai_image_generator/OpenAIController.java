@@ -13,6 +13,7 @@ import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -113,7 +114,8 @@ public class OpenAIController {
     // Semantic Search : Headphones should search for similar items say Wearables, Speaker, Bluetooth, Earbuds, Airpods etc.
     @PostMapping("/api/ai/openapi/semantic-search")
     public List<Document> getProducts(@RequestParam String text){
-        return vectorStore.similaritySearch(text);
+//        return vectorStore.similaritySearch(text);
+        return vectorStore.similaritySearch(SearchRequest.builder().query(text).topK(2).build());
     }
 
 }
