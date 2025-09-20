@@ -7,17 +7,28 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.embedding.EmbeddingRequest;
+import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
 public class OpenAIController {
 
     private ChatClient chatClient;
-    private final ChatMemory chatMemory; // for storing older chats
+    private final ChatMemory chatMemory;
+
+    @Qualifier("openAiEmbeddingModel")
+    @Autowired
+    private EmbeddingModel embeddingModel;
 
 
     public OpenAIController(OpenAiChatModel chatModel) {
@@ -68,6 +79,16 @@ public class OpenAIController {
 
        return response;
 
+    }
+
+    @PostMapping("/api/ai/openai/embedding")
+    public ResponseEntity<float[]> embeddings(@RequestParam String text) {
+        EmbeddingRequest embeddingRequest = new EmbeddingRequest(List.of(text), null);
+        EmbeddingResponse embeddingResponse = embeddingModel.call(embeddingRequest);
+
+        float[] embedding = embeddingResponse.getResult().getOutput();
+
+        return ResponseEntity.ok(embedding);
     }
 
 }
