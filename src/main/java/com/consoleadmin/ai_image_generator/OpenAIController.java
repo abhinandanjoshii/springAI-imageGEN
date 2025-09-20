@@ -7,11 +7,14 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +28,9 @@ public class OpenAIController {
 
     private ChatClient chatClient;
     private final ChatMemory chatMemory;
+
+    @Autowired
+    private VectorStore vectorStore;
 
     @Qualifier("openAiEmbeddingModel")
     @Autowired
@@ -83,12 +89,33 @@ public class OpenAIController {
 
     @PostMapping("/api/ai/openai/embedding")
     public ResponseEntity<float[]> embeddings(@RequestParam String text) {
-        EmbeddingRequest embeddingRequest = new EmbeddingRequest(List.of(text), null);
-        EmbeddingResponse embeddingResponse = embeddingModel.call(embeddingRequest);
+        float[] ans = embeddingModel.embed(text);
+        return ResponseEntity.ok(ans);
+    }
 
-        float[] embedding = embeddingResponse.getResult().getOutput();
+    @PostMapping("/api/ai/openai/similarityBetweenVectorDimensions")
+    public double getSimilarity(@RequestParam String text1, @RequestParam String text2) {
+        float[] embedding1 = embeddingModel.embed(text1);
+        float[] embedding2 = embeddingModel.embed(text2);
 
-        return ResponseEntity.ok(embedding);
+        double dotProduct = 0;
+        double norm1 = 0;
+        double norm2 = 0;
+
+        for (int i = 0; i < embedding1.length; i++) {
+            dotProduct += embedding1[i] * embedding2[i];
+            norm1 += Math.pow(embedding1[i], 2);
+            norm2 += Math.pow(embedding2[i], 2);
+        }
+        // Semantic Searchingg
+        return dotProduct*100 / (Math.sqrt(norm1) * Math.sqrt(norm2));
+    }
+
+    // Semantic Search : Headphones should search for similar items say Wearables, Speaker, Bluetooth, Earbuds, Airpods etc.
+    @PostMapping("/api/ai/openapi/semantic-search")
+    public List<Document> getProducts(@RequestParam String text){
+//        return vectorStore.similaritySearch(text);
+        return vectorStore.similaritySearch(SearchRequest.builder().query(text).topK(2).build());
     }
 
 }
